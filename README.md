@@ -72,6 +72,15 @@ report()
   api_calls: 42
 ================================================================================
 ```
+#### Auto-reset after N calls
+
+```python
+@track(reset_after=100)
+def process_order(order_id: int):
+    ...
+```
+
+When `process_order` has been called 100 times, its metrics (call count, latency, errors) are automatically cleared and the counter starts fresh. Only that function's data is reset — all other tracked functions are unaffected. Both successful and errored calls count toward N. Thread-safe.
 
 ---
 

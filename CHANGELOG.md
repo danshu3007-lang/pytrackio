@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
+## [0.11.0] — 2026-04-10
+
+### Added
+- `reset_after=N` parameter on `@track` decorator — automatically clears metrics for that specific function after every N invocations (successful and errored calls both count). Only the decorated function's data is reset; the rest of the registry is untouched. Thread-safe via per-decorator lock.
+- `reset_metric(name)` method on `MetricsRegistry` — resets samples and error count for a single named metric without affecting others.
+
+
 ## [0.3.0] — 2026-04-08
 
 ### Added

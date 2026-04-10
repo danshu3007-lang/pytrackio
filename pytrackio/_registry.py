@@ -73,6 +73,10 @@ class MetricsRegistry:
         with self._lock:
             self._samples.clear(); self._errors.clear()
             self._counters.clear(); self._start=time.monotonic()
+    def reset_metric(self, name: str):
+        with self._lock:
+            self._samples.pop(name, None)
+            self._errors.pop(name, None)
     def uptime_seconds(self): return time.monotonic()-self._start
 
 _REGISTRY = MetricsRegistry()

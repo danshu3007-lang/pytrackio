@@ -6,6 +6,7 @@ from ._registry import _REGISTRY
 from functools import wraps
 from typing import List, Optional, Dict, Any
 import json
+import threading
 
 DEFAULT_BUCKETS = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
 _HISTOGRAM__REGISTRY: Dict[str, Dict[float, int]] = {}
@@ -28,11 +29,12 @@ def _record_histogram(metric_name: str, duration_ms: float, buckets: List[float]
     
     _HISTOGRAM__REGISTRY[metric_name][float("inf")] += 1
 
-def track(func=None, *, name: str | None = None, histogram_buckets: List[float] | None = None): 
+def track(func=None, *, name: str | None = None, histogram_buckets: List[float] | None = None, reset_after: int | None = None):
     def decorator(fn):
         metric_name = name or getattr(fn, "__qualname__", fn.__name__)
         active_buckets = sorted(histogram_buckets) if histogram_buckets else DEFAULT_BUCKETS
-        
+        _call_count = 0
+        _call_lock = threading.Lock()
         if inspect.iscoroutinefunction(fn):
             @functools.wraps(fn)
             async def async_wrapper(*args, **kwargs):
@@ -44,9 +46,16 @@ def track(func=None, *, name: str | None = None, histogram_buckets: List[float] 
                     err = True 
                     raise e
                 finally:
+                    nonlocal _call_count
                     duration = (time.perf_counter() - start) * 1000
-                    _REGISTRY.record(metric_name, duration, err) 
+                    _REGISTRY.record(metric_name, duration, err)
                     _record_histogram(metric_name, duration, active_buckets)
+                    if reset_after is not None:
+                        with _call_lock:
+                            _call_count += 1
+                            if _call_count >= reset_after:
+                                _REGISTRY.reset_metric(metric_name)
+                                _call_count = 0
             return async_wrapper
 
         @functools.wraps(fn)
@@ -59,9 +68,16 @@ def track(func=None, *, name: str | None = None, histogram_buckets: List[float] 
                 err = True
                 raise e
             finally:
+                nonlocal _call_count
                 duration = (time.perf_counter() - start) * 1000
                 _REGISTRY.record(metric_name, duration, err)
                 _record_histogram(metric_name, duration, active_buckets)
+                if reset_after is not None:
+                    with _call_lock:
+                        _call_count += 1
+                        if _call_count >= reset_after:
+                            _REGISTRY.reset_metric(metric_name)
+                            _call_count = 0
         return sync_wrapper
 
     if func is None:
