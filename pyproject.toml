@@ -33,6 +33,13 @@ Homepage    = "https://github.com/danshu3007-lang/pytrackio"
 Repository  = "https://github.com/danshu3007-lang/pytrackio"
 "Bug Tracker" = "https://github.com/danshu3007-lang/pytrackio/issues"
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "django",
+    "flask",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["pytrackio*"]

@@ -238,6 +238,63 @@ registry.reset()
 
 ---
 
+## Framework Middleware Integrations
+
+pytrackio can automatically track HTTP request performance in Django and Flask applications.
+
+### Django
+
+Add the middleware to your Django `settings.py`:
+
+```python
+MIDDLEWARE = [
+    "pytrackio.django_middleware.RequestPerformanceMiddleware",
+    # other middleware...
+]
+```
+
+Each request is recorded in pytrackio using the metric format:
+
+```text
+django.request.GET /dashboard
+django.request.POST /login
+```
+
+The middleware also adds an `X-Request-Duration-MS` response header.
+
+### Flask
+
+Register the Flask tracker when creating your app:
+
+```python
+from flask import Flask
+from pytrackio.flask_middleware import init_pytrackio
+
+app = Flask(__name__)
+init_pytrackio(app)
+```
+
+Each request is recorded in pytrackio using the metric format:
+
+```text
+flask.request.GET /dashboard
+flask.request.POST /login
+```
+
+The middleware also adds an `X-Request-Duration-MS` response header.
+
+You can print the collected request metrics with:
+
+```python
+from pytrackio import report
+
+report()
+```
+
+Django and Flask are optional integrations. They are not required for core pytrackio usage.
+
+---
+
 ## Real-world example
 ```python
 from pytrackio import track, timer, counter, report
